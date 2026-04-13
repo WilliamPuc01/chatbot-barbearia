@@ -27,6 +27,7 @@ app.post('/chat', async (req, res) => {
 
 
 app.post('/webhook', async (req, res) => {
+    console.log('Webhook recebido:', JSON.stringify(req.body))
   try {
     const body = req.body
 
