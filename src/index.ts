@@ -23,32 +23,22 @@ app.post('/chat', async (req, res) => {
   res.json({ resposta })
 })
 
+
+
+
 app.post('/webhook', async (req, res) => {
   try {
     const body = req.body
 
-    // Ignora se não for mensagem de texto
-    if (body.event !== 'messages.upsert') {
-      res.sendStatus(200)
-      return
-    }
-
-    const mensagem = body.data?.message
-    if (!mensagem) {
-      res.sendStatus(200)
-      return
-    }
-
     // Ignora mensagens enviadas pelo próprio bot
-    if (mensagem.key?.fromMe) {
+    if (body.fromMe) {
       res.sendStatus(200)
       return
     }
 
-    // Extrai telefone e texto
-    const telefone = mensagem.key?.remoteJid
-    const texto = mensagem.message?.conversation || 
-                  mensagem.message?.extendedTextMessage?.text
+    // Ignora se não tiver texto
+    const texto = body.text?.message
+    const telefone = body.phone
 
     if (!telefone || !texto) {
       res.sendStatus(200)
@@ -58,16 +48,13 @@ app.post('/webhook', async (req, res) => {
     // Gera resposta da IA
     const resposta = await chat(telefone, texto)
 
-    // Envia resposta para o WhatsApp via Evolution API
-    await fetch(`${process.env.EVOLUTION_URL}/message/sendText/demo-barbearia`, {
+    // Envia resposta via Z-API
+    await fetch(`${process.env.ZAPI_URL}/instances/${process.env.ZAPI_INSTANCE_ID}/token/${process.env.ZAPI_TOKEN}/send-text`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': process.env.EVOLUTION_API_KEY!
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        number: telefone,
-        text: resposta
+        phone: telefone,
+        message: resposta
       })
     })
 
@@ -78,6 +65,9 @@ app.post('/webhook', async (req, res) => {
     res.sendStatus(500)
   }
 })
+
+
+
 
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {
