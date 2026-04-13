@@ -25,39 +25,40 @@ app.post('/chat', async (req, res) => {
 
 
 
-
 app.post('/webhook', async (req, res) => {
-    console.log('Webhook recebido:', JSON.stringify(req.body))
+  console.log('Webhook recebido:', JSON.stringify(req.body))
   try {
     const body = req.body
 
-    // Ignora mensagens enviadas pelo próprio bot
     if (body.fromMe) {
+      console.log('Ignorando mensagem própria')
       res.sendStatus(200)
       return
     }
 
-    // Ignora se não tiver texto
     const texto = body.text?.message
     const telefone = body.phone
 
+    console.log('Telefone:', telefone, 'Texto:', texto)
+
     if (!telefone || !texto) {
+      console.log('Sem telefone ou texto')
       res.sendStatus(200)
       return
     }
 
-    // Gera resposta da IA
     const resposta = await chat(telefone, texto)
+    console.log('Resposta da IA:', resposta)
 
-    // Envia resposta via Z-API
-    await fetch(`${process.env.ZAPI_URL}/instances/${process.env.ZAPI_INSTANCE_ID}/token/${process.env.ZAPI_TOKEN}/send-text`, {
+    const zapiResponse = await fetch(`${process.env.ZAPI_URL}/instances/${process.env.ZAPI_INSTANCE_ID}/token/${process.env.ZAPI_TOKEN}/send-text`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        phone: telefone,
-        message: resposta
-      })
+      body: JSON.stringify({ phone: telefone, message: resposta })
     })
+
+    console.log('Z-API status:', zapiResponse.status)
+    const zapiBody = await zapiResponse.text()
+    console.log('Z-API response:', zapiBody)
 
     res.sendStatus(200)
 
@@ -66,7 +67,6 @@ app.post('/webhook', async (req, res) => {
     res.sendStatus(500)
   }
 })
-
 
 
 
