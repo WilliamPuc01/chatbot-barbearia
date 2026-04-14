@@ -50,11 +50,14 @@ app.post('/webhook', async (req, res) => {
     const resposta = await chat(telefone, texto)
     console.log('Resposta da IA:', resposta)
 
-    const zapiResponse = await fetch(`${process.env.ZAPI_URL}/instances/${process.env.ZAPI_INSTANCE_ID}/token/${process.env.ZAPI_TOKEN}/send-text`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone: telefone, message: resposta })
-    })
+   const zapiResponse = await fetch(`${process.env.ZAPI_URL}/instances/${process.env.ZAPI_INSTANCE_ID}/token/${process.env.ZAPI_TOKEN}/send-text`, {
+    method: 'POST',
+    headers: { 
+        'Content-Type': 'application/json',
+        'Client-Token': process.env.ZAPI_CLIENT_TOKEN!
+    },
+    body: JSON.stringify({ phone: telefone, message: resposta })
+})
 
     console.log('Z-API status:', zapiResponse.status)
     const zapiBody = await zapiResponse.text()
