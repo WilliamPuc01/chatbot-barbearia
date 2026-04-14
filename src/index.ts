@@ -31,9 +31,16 @@ app.post('/webhook', async (req, res) => {
     const body = req.body
 
     if (body.fromMe) {
-      console.log('Ignorando mensagem própria')
-      res.sendStatus(200)
-      return
+    console.log('Ignorando mensagem própria')
+    res.sendStatus(200)
+    return
+    }
+
+    // Ignora mensagens de grupo
+    if (body.isGroup) {
+    console.log('Ignorando mensagem de grupo')
+    res.sendStatus(200)
+    return
     }
 
     const texto = body.text?.message
